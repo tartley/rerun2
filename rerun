@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+# USAGE: rerun COMMAND
+# v2.0.0
+
+# TODO: Can I avoid running `command` several times on a flurry of
+# simultaneous events? I want one call to 'execute' to swallow all the
+# events up to that point. Presumably I could put something inside the
+# while loop that would skip calling 'execute' if the last call was too
+# recent?
+#
+# TODO: I'd like to be able to press a key to rerun the command.
+# Can I start a parallel process which calls 'execute' on each keypress?
+
+function execute() {
+    clear
+    echo $@
+    eval $@
+}
+
+execute $@
+
+inotifywait --recursive --monitor --event modify --format "%w%f" . \
+| while read filename; do
+    execute $@
+done
+
