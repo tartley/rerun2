@@ -1,14 +1,36 @@
 #!/usr/bin/env bash
 
-# USAGE: rerun COMMAND
-# v2.0.0
+# USAGE:
+#
+#   rerun COMMAND
+#
+# Reruns COMMAND on every filesystem modify event in the current directory.
+# Useful for things like running tests whenever you hit 'save' in your editor.
+#
+# COMMAND should be quoted or escaped to prevent your shell interpretting it
+# before it reaches rerun. Single quotes will preserve the command exactly
+# as you type it, e.g:
+#
+#   rerun 'echo $PWD && date'
+#
+# COMMAND may use $change, which is set to the name of the modified file on
+# all but the first execution of COMMAND. e.g:
+#
+#   rerun 'echo modified file was $change'
+#
+# If COMMAND contains shell aliases, source rerun using a preceding dot:
+#
+#   . rerun COMMAND
+#
+# This is rerun2, because the original was written in Python,
+# and was over-complicated, particularly in working with shell aliases.
 
 # TODO: Can I avoid running `command` several times on a flurry of
-# simultaneous events? I want one call to 'execute' to swallow all the
+# simultaneous events? I want one call of 'execute' to swallow all the
 # events up to that point. Presumably I could put something inside the
 # while loop that would skip calling 'execute' if the last call was too
 # recent?
-#
+
 # TODO: I'd like to be able to press a key to rerun the command.
 # Can I start a parallel process which calls 'execute' on each keypress?
 
@@ -20,8 +42,8 @@ function execute() {
 
 execute $@
 
-inotifywait --recursive --monitor --event modify --format "%w%f" . \
-| while read filename; do
+inotifywait --quiet --recursive --monitor --event modify --format "%w%f" . \
+| while read change; do
     execute $@
 done
 
