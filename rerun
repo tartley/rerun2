@@ -42,8 +42,12 @@ function execute() {
 
 execute $@
 
+# stdbuf is from GNU coreutils.
+# https://stackoverflow.com/a/3373534/124946
+
 inotifywait --quiet --recursive --monitor --event modify --format "%w%f" . \
-| while read change; do
+| while read; do
+    date '+%s'
+done | stdbuf -oL uniq | while read; do
     execute $@
 done
-
