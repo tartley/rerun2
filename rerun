@@ -2,25 +2,28 @@
 
 # USAGE:
 #
-#   rerun COMMAND
+#   rerun COMMAND [ARGS...]
+#   rerun --eval BASHCOMMAND
 #
 # Reruns COMMAND on every filesystem modify event in the current directory.
 # Useful for things like running tests whenever you hit 'save' in your editor.
+#
+# TODO: review/rewrite documentation below.
 #
 # COMMAND should be quoted or escaped to prevent your shell interpretting it
 # before it reaches rerun. Single quotes will preserve the command exactly
 # as you type it, e.g:
 #
-#   rerun 'echo $PWD && date'
+#   rerun --eval 'echo $PWD && date'
 #
 # COMMAND may use $change, which is set to the name of the modified file on
 # all but the first execution of COMMAND. e.g:
 #
-#   rerun 'echo modified file was $change'
+#   rerun --eval 'echo modified file was $change'
 #
 # If COMMAND contains shell aliases, source rerun using a preceding dot:
 #
-#   . rerun COMMAND
+#   . rerun --eval COMMAND
 #
 # This is rerun2, because the original was written in Python,
 # and was over-complicated, particularly in working with shell aliases.
@@ -34,16 +37,24 @@
 # TODO: I'd like to be able to press a key to rerun the command.
 # Can I start a parallel process which calls 'execute' on each keypress?
 
-function execute() {
-    clear
-    echo $@
-    eval $@
-}
+if [ "$1" = "--eval" ] ; then
+    shift
+    function execute() {
+        clear
+        echo "$@"
+        eval "$@"
+    }
+else
+    function execute() {
+        clear
+        echo "$@"
+        "$@"
+    }
+fi
 
-execute $@
+execute "$@"
 
 inotifywait --quiet --recursive --monitor --event modify --format "%w%f" . \
 | while read change; do
-    execute $@
+    execute "$@"
 done
-
