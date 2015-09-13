@@ -4,12 +4,12 @@
 #
 #   rerun COMMAND
 #
-# Reruns COMMAND on every filesystem modify event in the current directory.
+# Reruns COMMAND on every filesystem 'modify' event in the current directory.
 # Useful for things like running tests whenever you hit 'save' in your editor.
 #
 # COMMAND should be quoted or escaped to prevent your shell interpretting it
 # before it reaches rerun. Single quotes will preserve the command exactly
-# as you type it, e.g:
+# as you type it, which is probably almost always what you want. e.g:
 #
 #   rerun 'echo $PWD && date'
 #
@@ -34,16 +34,25 @@
 # TODO: I'd like to be able to press a key to rerun the command.
 # Can I start a parallel process which calls 'execute' on each keypress?
 
+# Test cases:
+
+#   rerun ls "some file"
+# fails because of the space in the filename, but then unquoted commands almost
+# never do what I actually want. Much better and simpler is to quote every
+# command. Then:
+#   rerun 'ls "some file"'
+# works perfectly
+
 function execute() {
     clear
-    echo $@
-    eval $@
+    echo "$@"
+    eval "$@"
 }
 
-execute $@
+execute "$@"
 
 inotifywait --quiet --recursive --monitor --event modify --format "%w%f" . \
 | while read change; do
-    execute $@
+    execute "$@"
 done
 
