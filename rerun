@@ -7,46 +7,67 @@
 # Reruns COMMAND on every filesystem 'modify' event in the current directory.
 # Useful for things like running tests whenever you hit 'save' in your editor.
 #
-# COMMAND should be quoted or escaped to prevent your shell interpretting it
-# before it reaches rerun. Single quotes will preserve the command exactly
-# as you type it, which is probably almost always what you want. e.g:
+# COMMAND is evaluated by Bash before it gets passed to rerun. To prevent
+# this you must quote or escape things.
 #
-#   rerun 'echo $PWD && date'
+# Rerun does not implicitly re-evaluate the command on every iteration,
+# it just executes it.
 #
-# COMMAND may use $change, which is set to the name of the modified file on
-# all but the first execution of COMMAND. e.g:
+# Hence, if a command consists of more than "EXE arg1 arg2 ...", i.e. you
+# need Bash to evaluate the command before executing it, e.g. it is a compound
+# command featuring ';' or '&&' or '|', then you need to explicitly execute
+# your command in a subshell, that will do this evaluation.
+# For example, if you would like 'rerun' to execute the COMMAND:
 #
-#   rerun 'echo modified file was $change'
+#   date ; echo hello
+#
+# you cannot pass this to 'rerun' directly, because the command needs a shell
+# to interpret it on every execution, to take care of the '|', invoking
+# separate processes and piping them together. Hence you must:
+#
+#   rerun sh -c "date ; echo hello"
+#
+# COMMAND may use $change, which is set to the name of the modified file on all
+# but the first execution of COMMAND. e.g:
+#
+#   rerun 'echo $change'
+#
+# TODO: I can't get 'echo $change' to work. Have tried things like:
+#   rerun sh -c 'echo $change'
+#   rerun /usr/bin/env sh -c 'echo $change'
 #
 # If COMMAND contains shell aliases, source rerun using a preceding dot:
 #
 #   . rerun COMMAND
 #
-# This is rerun2, because the original was written in Python,
-# and was over-complicated, particularly in working with shell aliases.
-
+# TODO: I can't get shell aliases to work. e.g:
+#   $ rerun ll
+#   ll: Command not found
+#   $ . rerun ll
+#   ll: Command not found
+#
 # TODO: Can I avoid running `command` several times on a flurry of
 # simultaneous events? I want one call of 'execute' to swallow all the
 # events up to that point. Presumably I could put something inside the
 # while loop that would skip calling 'execute' if the last call was too
 # recent?
 
-# TODO: I'd like to be able to press a key to rerun the command.
-# Can I start a parallel process which calls 'execute' on each keypress?
-
 # Test cases:
-
+#
 #   rerun ls "some file"
-# fails because of the space in the filename, but then unquoted commands almost
-# never do what I actually want. Much better and simpler is to quote every
-# command. Then:
-#   rerun 'ls "some file"'
-# works perfectly
+#   Used to fail before removing 'eval'.
+#
+#   rerun ls some*
+#   Used to fail due to spaces in matching filenames,
+#   before putting quotes on "$@".
+#
+#   rerun date
+#   Updates the displayed date on every iteration.
 
 function execute() {
     clear
     echo "$@"
-    eval "$@"
+    "$@"
 }
 
 execute "$@"
