@@ -27,14 +27,11 @@
 #
 #   rerun sh -c "date ; echo hello"
 #
-# COMMAND may use $change, which is set to the name of the modified file on all
-# but the first execution of COMMAND. e.g:
+# If you are re-evaluating COMMAND like this on every execution, may use
+# $change in your COMMAND, which is set to the name of the modified file on all
+# but the first execution. e.g:
 #
-#   rerun 'echo $change'
-#
-# TODO: I can't get 'echo $change' to work. Have tried things like:
 #   rerun sh -c 'echo $change'
-#   rerun /usr/bin/env sh -c 'echo $change'
 #
 # If COMMAND contains shell aliases, source rerun using a preceding dot:
 #
@@ -51,7 +48,8 @@
 # events up to that point. Presumably I could put something inside the
 # while loop that would skip calling 'execute' if the last call was too
 # recent?
-
+# idea: date +'%s.%N'
+#
 # Test cases:
 #
 #   rerun ls "some file"
@@ -74,6 +72,7 @@ execute "$@"
 
 inotifywait --quiet --recursive --monitor --event modify --format "%w%f" . \
 | while read change; do
+    export change
     execute "$@"
 done
 
