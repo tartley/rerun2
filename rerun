@@ -27,28 +27,9 @@
 #
 #   rerun sh -c "date ; echo hello"
 #
-# If you are re-evaluating COMMAND like this on every execution, may use
-# $change in your COMMAND, which is set to the name of the modified file on all
-# but the first execution. e.g:
-#
-#   rerun sh -c 'echo $change'
-#
 # If COMMAND contains shell aliases, source rerun using a preceding dot:
 #
 #   . rerun COMMAND
-#
-# TODO: I can't get shell aliases to work. e.g:
-#   $ rerun ll
-#   ll: Command not found
-#   $ . rerun ll
-#   ll: Command not found
-#
-# TODO: Can I avoid running `command` several times on a flurry of
-# simultaneous events? I want one call of 'execute' to swallow all the
-# events up to that point. Presumably I could put something inside the
-# while loop that would skip calling 'execute' if the last call was too
-# recent?
-# idea: date +'%s.%N'
 #
 # Test cases:
 #
@@ -61,6 +42,17 @@
 #
 #   rerun date
 #   Updates the displayed date on every iteration.
+#
+# TODO: I can't get shell aliases to work. :-( e.g:
+#   $ rerun ll
+#   ll: Command not found
+#   $ . rerun ll
+#   ll: Command not found
+#
+# TODO: Can user specify file/directory regexes to be ignored?
+
+# Events that occur within this time from an initial one are ignored
+IGNORE_SECS=0.15
 
 function execute() {
     clear
@@ -69,10 +61,19 @@ function execute() {
 }
 
 execute "$@"
+ignore_until=$(date +%s.%N)
 
-inotifywait --quiet --recursive --monitor --event modify --format "%w%f" . \
-| while read change; do
-    export change
-    execute "$@"
+inotifywait --quiet --recursive --monitor --format "%e %w%f" \
+    --event modify --event move --event create --event delete \
+    --exclude '^\./\.git/' . | while read changed
+do
+
+    echo "$changed"
+
+    if [ $(echo " $(date +%s.%N) > $ignore_until" | bc) -eq 1 ] ; then
+        ignore_until=$(echo "$(date +%s.%N) + $IGNORE_SECS" | bc)
+        ( sleep $IGNORE_SECS ; execute "$@" ) &
+    fi
+
 done
 
