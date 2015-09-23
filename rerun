@@ -53,6 +53,7 @@
 
 # Events that occur within this time from an initial one are ignored
 IGNORE_SECS=0.15
+IGNORE_NANOSECS="$(echo "$IGNORE_SECS" * 1000000000 | bc)"
 
 function execute() {
     clear
@@ -61,7 +62,7 @@ function execute() {
 }
 
 execute "$@"
-ignore_until=$(date +%s.%N)
+ignore_until=$(date +%s%N)
 
 inotifywait --quiet --recursive --monitor --format "%e %w%f" \
     --event modify --event move --event create --event delete \
@@ -70,8 +71,9 @@ do
 
     echo "$changed"
 
-    if [ $(echo " $(date +%s.%N) > $ignore_until" | bc) -eq 1 ] ; then
-        ignore_until=$(echo "$(date +%s.%N) + $IGNORE_SECS" | bc)
+    now_nanosecs="$(date +%s%N)"
+    if (( now_nanosecs > ignore_until )) ; then
+        let ignore_until=now_nanosecs+IGNORE_NANOSECS
         ( sleep $IGNORE_SECS ; execute "$@" ) &
     fi
 
