@@ -4,58 +4,59 @@
 #
 #   rerun COMMAND
 #
-# Reruns COMMAND on every filesystem 'modify' event in the current directory.
-# Useful for things like running tests whenever you hit 'save' in your editor.
+# Reruns COMMAND on every filesystem modify/create/delete event in the current
+# directory. Useful for things like running tests whenever you hit 'save' in
+# your editor.
 #
-# COMMAND is evaluated by Bash before it gets passed to rerun. To prevent
-# this you must quote or escape things.
+# COMMAND is evaluated by Bash before it gets passed to rerun. To prevent this
+# you must quote or escape things.
 #
-# Rerun does not implicitly re-evaluate the command on every iteration,
-# it just executes it.
+# Rerun does not implicitly re-evaluate the command on every iteration, it just
+# executes it.
 #
-# Hence, if a command consists of more than "EXE arg1 arg2 ...", i.e. you
-# need Bash to evaluate the command before executing it, e.g. it is a compound
-# command featuring ';' or '&&' or '|', then you need to explicitly execute
-# your command in a subshell, that will do this evaluation.
-# For example, if you would like 'rerun' to execute the COMMAND:
+# Hence, if a command consists of more than "EXE arg1 arg2 ...", i.e. you need
+# Bash to evaluate the command before executing it, e.g. it is a compound
+# command featuring things like ';' or '&&' or '|', then you need to explicitly
+# execute your command in a subshell that will do this evaluation. For example,
+# I frequently like to clear the screen then run tests:
 #
-#   date ; echo hello
+#   clear; python -m unittest discover
 #
-# you cannot pass this to 'rerun' directly, because the command needs a shell
-# to interpret it on every execution, to take care of the '|', invoking
-# separate processes and piping them together. Hence you must:
+# you cannot pass this to 'rerun' directly, because the compound nature of the
+# command needs a shell to interpret it. Hence you must:
 #
-#   rerun sh -c "date ; echo hello"
+#   rerun sh -c "clear; python -m unittest discover"
 #
-# If COMMAND contains shell aliases, source rerun using a preceding dot:
+# Rerun will execute the whole "sh -c "..."" command on every iteration.
+# and 'sh', when invoked, will interpret the compound command
+# it has been given. ("clear; python...")
+#
+# For some reason 'rerun' doesn't currently work if COMMAND contains shell
+# aliases. It thought it would work if rerun were sourced using a preceding dot:
 #
 #   . rerun COMMAND
 #
-# Test cases:
+# But it doesn't. If anyone knows how to fix this I'd love to hear about it.
 #
-#   rerun ls "some file"
-#   Used to fail before removing 'eval'.
+# Some test cases:
 #
-#   rerun ls some*
-#   Used to fail due to spaces in matching filenames,
-#   before putting quotes on "$@".
+#   rerun ls "some file" # Used to fail in early versions of rerun.
 #
-#   rerun date
-#   Updates the displayed date on every iteration.
+#   rerun ls some* # Used to fail in early versions of rerun,
+#                  # due to spaces in matching filenames.
 #
-# TODO: I can't get shell aliases to work. :-( e.g:
-#   $ rerun ll
-#   ll: Command not found
-#   $ . rerun ll
-#   ll: Command not found
+#   rerun date # Should update the displayed date on every iteration.
 #
-# TODO: Can user specify file/directory regexes to be ignored?
+# TODO: I can't get shell aliases to work. :-( e.g: $ rerun ll ll: Command not
+# found $ . rerun ll ll: Command not found
+#
+# TODO: We currently ignore './.git' directories. I should add the others.
+# Can the user specify their own regexes?
 
 # Events that occur within this time from an initial one are ignored
-IGNORE_SECS=0.15
+IGNORE_SECS=0.25
 
 function execute() {
-    clear
     echo "$@"
     "$@"
 }
