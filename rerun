@@ -67,7 +67,7 @@ ignore_until=$(date +%s.%N)
 inotifywait --quiet --recursive --monitor --format "%e %w%f" \
     --event modify --event move --event create --event delete \
     --exclude '__pycache__' \
-    * | while read changed
+    . | while read changed
 do
 
     echo "$changed"
