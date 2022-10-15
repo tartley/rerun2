@@ -5,6 +5,12 @@ ignore_secs=0.25
 clear='false'
 verbose='false'
 
+if ! command -v inotifywait >/dev/null
+then
+    echo "error: inotifywait: command not found. hint: install inotify-tools"
+    exit 1
+fi
+
 function usage {
     echo "Rerun a given command every time filesystem changes are detected."
     echo ""
