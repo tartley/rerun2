@@ -5,9 +5,15 @@ ignore_secs=0.25
 clear='false'
 verbose='false'
 
+# check dependencies
 if ! command -v inotifywait >/dev/null
 then
     echo "error: inotifywait: command not found. hint: install inotify-tools"
+    exit 1
+fi
+if ! command -v bc >/dev/null
+then
+    echo "error: bc: command not found. hint: install bc"
     exit 1
 fi
 
