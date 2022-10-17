@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Events that occur within this time from an initial one are ignored
-ignore_secs=0.25
+ignore_msecs=250
 clear='false'
 verbose='false'
 
@@ -11,11 +11,15 @@ then
     echo "error: inotifywait: command not found. hint: install inotify-tools"
     exit 1
 fi
-if ! command -v bc >/dev/null
-then
-    echo "error: bc: command not found. hint: install bc"
-    exit 1
-fi
+
+# int msecs -> float secs
+a=000$ignore_msecs
+a=${a:0: -3}
+while [ "${a:0:1}" = 0 ]; do a=${a:1}; done
+if [ -z "$a" ]; then a=0; fi
+b=000$ignore_msecs
+b=${b: -3}
+ignore_secs=$a.$b
 
 function usage {
     echo "Rerun a given command every time filesystem changes are detected."
@@ -83,10 +87,13 @@ do
 
     changes="$changes\n$changed"
 
-    if [ $(echo "$(date +%s.%N) > $ignore_until" | bc) -eq 1 ] ; then
-        ignore_until=$(echo "$(date +%s.%N) + $ignore_secs" | bc)
+    now_msecs=$(date +%s.%N)
+    now_msecs=${now_msecs/./}
+    now_msecs=${now_msecs:0: -6}
+
+    if (( now_msecs > ignore_until )); then
+        ignore_until=$(( now_msecs + ignore_msecs ))
         ( sleep $ignore_secs ; execute "$@" ) &
     fi
 
 done
-
