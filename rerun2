@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Events that occur within this time from an initial one are ignored
-ignore_msecs=250
+cooldown_s='0.250'
 clear='false'
 verbose='false'
 
@@ -11,15 +11,6 @@ then
     echo "error: inotifywait: command not found. hint: install inotify-tools"
     exit 1
 fi
-
-# int msecs -> float secs
-a=000$ignore_msecs
-a=${a:0: -3}
-while [ "${a:0:1}" = 0 ]; do a=${a:1}; done
-if [ -z "$a" ]; then a=0; fi
-b=000$ignore_msecs
-b=${b: -3}
-ignore_secs=$a.$b
 
 function usage {
     echo "Rerun a given command every time filesystem changes are detected."
@@ -33,7 +24,7 @@ function usage {
     echo ""
     echo "Run the given COMMAND, and then every time filesystem changes are"
     echo "detected in or below the current directory, run COMMAND again."
-    echo "Changes within $ignore_secs seconds are grouped into one."
+    echo "Changes within $cooldown_s seconds are grouped into one."
     echo ""
     echo "This is useful for running commands to regenerate visual output every"
     echo "time you hit [save] in your editor. For example, re-run tests, or"
@@ -77,7 +68,8 @@ function execute() {
 }
 
 execute "$@"
-ignore_until=$(date +%s.%N)
+end_of_cooldown="$( date +%s%N )"
+cooldown_ns="$( printf '%0.9f' "$cooldown_s" | sed -r -e 's|\.||' -e 's|^0+||' )"
 
 inotifywait --quiet --recursive --monitor --format "%e %w%f" \
     --event modify --event move --event create --event delete \
@@ -87,13 +79,10 @@ do
 
     changes="$changes\n$changed"
 
-    now_msecs=$(date +%s.%N)
-    now_msecs=${now_msecs/./}
-    now_msecs=${now_msecs:0: -6}
-
-    if (( now_msecs > ignore_until )); then
-        ignore_until=$(( now_msecs + ignore_msecs ))
-        ( sleep $ignore_secs ; execute "$@" ) &
+    now="$( date +%s%N )"
+    if (( now > end_of_cooldown )); then
+        end_of_cooldown="$(( now + cooldown_ns ))"
+        ( sleep "$cooldown_s" && execute "$@" ) &
     fi
 
 done
