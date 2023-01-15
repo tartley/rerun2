@@ -58,11 +58,12 @@ function execute() {
 
     if [ -n "$verbose" ]; then
         if [ -n "$changes" ]; then
-            echo -e "Changed: $(echo -e $changes | cut -d' ' -f2 | sort -u | tr '\n' ' ')"
+            echo -e "Changed: $( echo -e $changes | cut -d' ' -f2 | sort -u | tr '\n' ' ' )"
             changes=""
         fi
         echo "$@"
     fi
+
     "$@"
 }
 
@@ -70,9 +71,9 @@ execute "$@"
 end_of_cooldown="$( date +%s%N )"
 cooldown_ns="$( printf '%0.9f' "$cooldown_s" | sed -r -e 's|\.||' -e 's|^0+||' )"
 
-inotifywait --quiet --recursive --monitor --format "%e %w%f" \
-    --event modify --event move --event create --event delete \
-    --exclude '(\..*\.swp|__pycache__|\.cache|\.pytest_cache)' \
+inotifywait --quiet --recursive --monitor --format '%e %w%f' \
+    --event='modify' --event='move' --event='create' --event='delete' \
+    --exclude='(\..*\.swp|__pycache__|\.cache|\.pytest_cache)' \
     . | while read changed
 do
 
