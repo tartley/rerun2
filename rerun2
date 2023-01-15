@@ -2,8 +2,8 @@
 
 # Events that occur within this time from an initial one are ignored
 cooldown_s='0.250'
-clear='false'
-verbose='false'
+clear=''
+verbose=''
 
 # check dependencies
 if ! command -v inotifywait >/dev/null
@@ -45,8 +45,8 @@ function usage {
 
 while [ $# -gt 0 ]; do
     case "$1" in
-      -c|--clear) clear='true';;
-      -v|--verbose) verbose='true' ;;
+      -c|--clear) clear='1';;
+      -v|--verbose) verbose='1' ;;
       -h|--help) usage; exit;;
       *) break;;
     esac
@@ -54,10 +54,9 @@ while [ $# -gt 0 ]; do
 done
 
 function execute() {
-    if [ $clear = "true" ]; then
-        clear
-    fi
-    if [ $verbose = "true" ]; then
+    [ -n "$clear" ] && clear
+
+    if [ -n "$verbose" ]; then
         if [ -n "$changes" ]; then
             echo -e "Changed: $(echo -e $changes | cut -d' ' -f2 | sort -u | tr '\n' ' ')"
             changes=""
