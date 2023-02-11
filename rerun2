@@ -65,7 +65,7 @@ cooldown_ns="$( printf '%0.9f' "$cooldown_s" | sed -r -e 's|\.||' -e 's|^0+||' )
 
 inotifywait --quiet --recursive --monitor --format '%e %w%f' \
     --event='modify,close_write,move,create,delete' \
-    --exclude='\..*\.swp|__pycache__|\.cache|\.pytest_cache' \
+    --exclude='\.git|\..*\.swp|__pycache__|\.cache|\.pytest_cache' \
     . | while read changed
 do
 
