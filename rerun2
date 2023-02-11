@@ -58,7 +58,7 @@ function execute() {
 
     if [ -n "$verbose" ]; then
         if [ -n "$changes" ]; then
-            echo -e "Changed: $( echo -e $changes | cut -d' ' -f2 | sort -u | tr '\n' ' ' )"
+            echo -e "Changed: $( echo -e $changes | cut -d' ' -f2- | sort -u | tr '\n' ' ' )"
             changes=""
         fi
         echo "$@"
