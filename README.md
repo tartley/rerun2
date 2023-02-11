@@ -71,12 +71,24 @@ Things one might dislike about it:
 
 ## Alternatives
 
-This project is the successor to a Python program I wrote:
+### rerun
 
-https://github.com/tartley/rerun
+`rerun2` is the successor to `rerun`, a similar utility written in Python:
 
-which polls for filesystem changes rather than using events. So this *rerun*
+[https://github.com/tartley/rerun](https://github.com/tartley/rerun)
+
+which polls for filesystem changes rather than using events. Hence *rerun*
 works on all operating systems, works on mounted filesystems in VMs. In
-practice I've never seen it be more than a couple hundred milliseconds, even
-on what I consider large projects (e.g. including the Django source).
+practice I've never seen it take more than a couple hundred milliseconds to
+poll, even on what I consider large projects (e.g. including the Django
+source).
+
+### entr
+
+Aha! I didn't discover this until looooong after writing rerun & rerun2:
+
+[https://www.systutorials.com/docs/linux/man/1-entr/](https://www.systutorials.com/docs/linux/man/1-entr/)
+
+This looks like a serious effort, and perhaps I'll migrate to using `entr`
+myself in future.
 
