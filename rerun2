@@ -55,15 +55,7 @@ done
 
 function execute() {
     [ -n "$clear" ] && clear
-
-    if [ -n "$verbose" ]; then
-        if [ -n "$changes" ]; then
-            echo -e "Changed: $( echo -e $changes | cut -d' ' -f2- | sort -u | tr '\n' ' ' )"
-            changes=""
-        fi
-        echo "$@"
-    fi
-
+    [ -n "$verbose" ] && echo "$@"
     "$@"
 }
 
@@ -77,12 +69,14 @@ inotifywait --quiet --recursive --monitor --format '%e %w%f' \
     . | while read changed
 do
 
-    changes="$changes\n$changed"
-
     now="$( date +%s%N )"
     if (( now > end_of_cooldown )); then
         end_of_cooldown="$(( now + cooldown_ns ))"
         ( sleep "$cooldown_s" && execute "$@" ) &
+    fi
+
+    if [ -n "$verbose" ]; then
+        echo "$changed"
     fi
 
 done
