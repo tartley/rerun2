@@ -1,22 +1,28 @@
 # rerun2
 
-Save *rerun2* on your PATH, and invoke it using:
+Runs a given COMMAND every time it detects filesystem update events in the current
+directory, or any subdirectory.
 
-    rerun COMMAND
+    rerun2 COMMAND
 
-It runs COMMAND every time there's a filesystem modify event within your current
-directory (recursive). For example, it can re-run tests every time you hit
-'save' in your editor. Or it can re-generate rendered output (html, SVG, etc)
-every time you save the source (e.g. Markdown or GraphViz dot).
+For example, it can show you the latest test results in an adjacent terminal
+every time you save your code from the comfort of your favorite editor:
 
-COMMAND needs to be a single parameter to `rerun`, hence if it contains
-spaces, either quote the whole thing:
+    rerun2 pytest
 
-    rerun "ls ~"
+Or it can re-generate rendered HTML when you save Markdown:
 
-or escape them:
+    rerun2 pandoc README.md -o README.html
 
-    rerun ls\ ~
+Or call GraphViz to regenerate SVG when you save the .dot source file:
+
+    rerun2 dot mydiagram.dot -T svg -o mydiagram.svg
+
+COMMAND needs to be a single command (ie. don't use pipes (`|`), semi-colons (`;`) or
+boolean operators (`&&`, `||`, etc). To give a compound command, use rerun2 to invoke
+a shell, and pass the compound command as a single string:
+
+    rerun2 bash -c "ls -l | grep ^d"
 
 Things one might like about it:
 
@@ -44,6 +50,13 @@ Things one might like about it:
 
 Things one might dislike about it:
 
+* It currently only has a hard-coded list of files that it ignores changes to.
+  So if you use it to run Python tests, and that generates or modifies the files
+  in your __pycache__ directory, then it knows to ignore those, so you won't
+  trigger a cascade of re-executions of COMMAND. But most filesystem side-effects
+  of your COMMAND will trigger an endless cycle of updates. I was about to add
+  something like an '--ignore' flag, when I discovered 'entr' (see below), so
+  perhaps I don't have to.
 * It uses *inotify* to recieve filesystem events, so won't work outside of Linux.
   For a cross-platform solution, consider this project's precursor,
   https://github.com/tartley/rerun (see below).
@@ -91,4 +104,3 @@ Aha! I didn't discover this until looooong after writing rerun & rerun2:
 
 This looks like a serious effort, and perhaps I'll migrate to using `entr`
 myself in future.
-
