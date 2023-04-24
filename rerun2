@@ -61,7 +61,7 @@ function execute() {
 
 execute "$@"
 end_of_cooldown="$( date +%s%N )"
-cooldown_ns="$( printf '%0.9f' "$cooldown_s" | sed -r -e 's|\.||' -e 's|^0+||' )"
+cooldown_ns="$( LC_ALL=C printf '%0.9f' "$cooldown_s" | sed -r -e 's|\.||' -e 's|^0+||' )"
 
 inotifywait --quiet --recursive --monitor --format '%e %w%f' \
     --event='modify,close_write,move,create,delete' \
