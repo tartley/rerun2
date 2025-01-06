@@ -1,5 +1,8 @@
 # rerun2
 
+> UPDATE: I no longer use this tool, so have little interest in maintaining it.
+> I have migrated to 'entr' instead, described under 'alternatives' below.
+
 Runs a given COMMAND every time it detects filesystem update events in the current
 directory, or any subdirectory.
 
@@ -84,6 +87,12 @@ Things one might dislike about it:
 
 ## Alternatives
 
+### entr
+
+[https://eradman.com/entrproject/](https://eradman.com/entrproject/)
+
+I didn't discover this until looooong after writing rerun & rerun2. It is a serious effort, much better than my hacky script, and I have migrated to using it instead of rerun2.
+
 ### rerun
 
 `rerun2` is the successor to `rerun`, a similar utility written in Python:
@@ -96,11 +105,3 @@ practice I've never seen it take more than a couple hundred milliseconds to
 poll, even on what I consider large projects (e.g. including the Django
 source).
 
-### entr
-
-Aha! I didn't discover this until looooong after writing rerun & rerun2:
-
-[https://www.systutorials.com/docs/linux/man/1-entr/](https://www.systutorials.com/docs/linux/man/1-entr/)
-
-This looks like a serious effort, and perhaps I'll migrate to using `entr`
-myself in future.
